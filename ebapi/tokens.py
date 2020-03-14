@@ -2,10 +2,11 @@
 import pandas as pd
 import os
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
-
+app_key = os.environ["ECOBEE_APPLICATION_KEY"]
 
 class TokensMeta(type):
     def __init__(self, name, base, attrs):
@@ -117,8 +118,8 @@ class FileTokens(metaclass=TokensMeta):
         for idx, row in self.user.iterrows():
             ref = row["refresh_token"]
             try:
-                self.user.loc[idx] = refresh_token(ref)
-            except Exception:
+                self.user.loc[idx] = self.refresh_token(ref)
+            except Exception as e:
                 pass
             finally:
                 self.save_user_file()
@@ -206,13 +207,13 @@ class FileTokens(metaclass=TokensMeta):
 
     def refresh_token(self, ref_token):
         """Refreshe the tokens for a single thermostat."""
-        logger.info("Original refresh_tokens")
-        return
+        # logger.info("Original refresh_tokens")
+        # return
         headers = {"Content-Type": "application/json;charset=UTF-8"}
         url = 'https://api.ecobee.com/token'
         params = {"grant_type": "refresh_token",
                   "code": ref_token,
-                  "client_id": api_key}
+                  "client_id": app_key}
         r = requests.post(url, params=params, headers=headers)
         jsn = r.json()
         try:

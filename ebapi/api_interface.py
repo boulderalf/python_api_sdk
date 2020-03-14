@@ -23,6 +23,20 @@ class ApiInterface:
         funcs = [wrap_create_vacation(v.to_json()) for v in vacations]
         return self.conn.send_functions(funcs, identifier)
 
+    def send_message(self, message, identifier):
+        """Send the message to thermostat identifier"""
+        funcs = [wrap_send_message(message)]
+        return self.conn.send_functions(funcs, identifier)
+
+    def send_hold(self, hold_type, heat_hold_temp, cool_hold_temp, fan, identifier):
+        funcs = [wrap_set_hold(hold_type, heat_hold_temp, cool_hold_temp, fan)]
+        return self.conn.send_functions(funcs, identifier)
+
+    def send_resume(self, identifier):
+        funcs = [{"type": "resumeProgram",
+                  'params': {'resumeAll': True}}]
+        return self.conn.send_functions(funcs, identifier)
+
     def get_precool_settings(self, identifier):
         """Return the 'disablePreCooling setting AKA. Smart Recovery"""
         settings = self.get_settings(identifier)
@@ -117,7 +131,7 @@ class ApiInterface:
 
     def add_user(self):
         self.conn.add_user()
-    
+
     def rm_user(self, tstat_id):
         self.conn.tokens.delete(tstat_id)
 
@@ -125,7 +139,25 @@ class ApiInterface:
         print("Thermostat Identifier | User Identifier")
         for tstat_id, user_id in self.conn.tokens.tstat.itertuples():
             print("     {:s}     |     {:11}".format(tstat_id, user_id))
-            
+
+
+def wrap_set_hold(hold_type, heat_hold_temp, cool_hold_temp, fan):
+    create_function = {"type": "setHold",
+                       "params": {'holdType': hold_type,
+                                  'isTemperatureAbsolute':False,
+                                  'isTemperatureRelative':False,
+                                  'heatHoldTemp': heat_hold_temp,
+                                  'coolHoldTemp': cool_hold_temp,
+                                  'fan': fan}}
+    return create_function
+
+
+def wrap_send_message(message):
+    create_function = {"type": "sendMessage",
+                       "params": {'text': message}}
+    return create_function
+
+
 def wrap_create_vacation(vacation):
     create_function = {"type": "createVacation",
                        "params": vacation}
